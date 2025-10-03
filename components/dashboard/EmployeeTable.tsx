@@ -345,6 +345,18 @@ import {
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/Avatar';
 
+// Define the API response type to match MongoDB schema
+interface APIUser {
+  _id: string;
+  name: string;
+  email: string;
+  department: string;
+  position: string;
+  status: 'active' | 'inactive';
+  date: string;
+  avatar?: string;
+}
+
 export interface Employee {
   id: string;
   name: string;
@@ -383,20 +395,20 @@ export function EmployeeTable({
   });
 
   // Fetch employees using TanStack Query
-  const { isLoading, isError, data, error } = useQuery<any[], Error>({
+  const { isLoading, isError, data, error } = useQuery<APIUser[], Error>({
     queryKey: ['employees'],
     queryFn: getUser,
   });
 
   // Transform API data to match Employee interface (MongoDB schema uses _id, date instead of id, joinDate)
-  const employees: Employee[] = (data || []).map((user: any) => ({
-    id: user._id || user.id,
+  const employees: Employee[] = (data || []).map((user: APIUser) => ({
+    id: user._id,
     name: user.name || '',
     email: user.email || '',
     department: user.department || '',
     position: user.position || '',
-    status: (user.status as 'active' | 'inactive') || 'active',
-    joinDate: user.date || user.joinDate || new Date().toISOString().split('T')[0],
+    status: user.status || 'active',
+    joinDate: user.date || new Date().toISOString().split('T')[0],
     avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
   }));
 

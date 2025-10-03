@@ -1,5 +1,4 @@
 "use client";
-import { useState } from 'react';
 import { Header } from '../layouts/Header';
 import { Footer } from '../layouts/Footer';
 import  { EmployeeTable, Employee }  from './EmployeeTable';
@@ -7,6 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Users, UserCheck, UserX, TrendingUp } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getUser } from '../../lib/helper';
+
+// Define the API response type
+interface APIUser {
+  _id: string;
+  name: string;
+  email: string;
+  department: string;
+  position: string;
+  status: 'active' | 'inactive';
+  date: string;
+  avatar?: string;
+}
 
 interface DashboardProps {
   userName: string;
@@ -20,20 +31,20 @@ export function Dashboard({ userName, userEmail, userAvatar, onLogout }: Dashboa
   const queryClient = useQueryClient();
   
   // Fetch employees using TanStack Query
-  const { isLoading, isError, data, error } = useQuery<Employee[], Error>({
+  const { isLoading, isError, data, error } = useQuery<APIUser[], Error>({
     queryKey: ['employees'],
     queryFn: getUser,
   });
 
   // Transform the API data to match our Employee interface
-  const employees: Employee[] = (data || []).map((user: any) => ({
-    id: user._id || user.id,
+  const employees: Employee[] = (data || []).map((user: APIUser) => ({
+    id: user._id,
     name: user.name || '',
     email: user.email || '',
     department: user.department || '',
     position: user.position || '',
     status: user.status || 'active',
-    joinDate: user.date || user.joinDate || new Date().toISOString().split('T')[0],
+    joinDate: user.date || new Date().toISOString().split('T')[0],
     avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
   }));
 
