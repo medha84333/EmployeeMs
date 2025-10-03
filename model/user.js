@@ -8,7 +8,7 @@ const userSchema = new Schema({
     department: String,
     position: String,
     status: String,
-    joinDate: Date,
+    date: String,
 })
 
 const Users = models.user || model('user', userSchema);

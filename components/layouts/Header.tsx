@@ -55,7 +55,7 @@ export function Header({
             {userName && onNavigateHome && (
               <Button variant="ghost" onClick={onNavigateHome} className="gap-2">
                 {/* <Home className="h-4 w-4" /> */}
-                Home
+                Daashboard
               </Button>
             )}
             {/* {!userName && onNavigateLogin && (

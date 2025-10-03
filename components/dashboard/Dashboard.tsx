@@ -5,6 +5,8 @@ import { Footer } from '../layouts/Footer';
 import  { EmployeeTable, Employee }  from './EmployeeTable';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Users, UserCheck, UserX, TrendingUp } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getUser } from '../../lib/helper';
 
 interface DashboardProps {
   userName: string;
@@ -13,79 +15,133 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-const initialEmployees: Employee[] = [
-  {
-    id: '1',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@company.com',
-    department: 'Engineering',
-    position: 'Senior Developer',
-    status: 'active',
-    joinDate: '2023-01-15',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah.johnson@company.com',
-  },
-  {
-    id: '2',
-    name: 'Michael Chen',
-    email: 'michael.chen@company.com',
-    department: 'Marketing',
-    position: 'Marketing Manager',
-    status: 'active',
-    joinDate: '2023-03-20',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=michael.chen@company.com',
-  },
-  {
-    id: '3',
-    name: 'Emily Davis',
-    email: 'emily.davis@company.com',
-    department: 'Human Resources',
-    position: 'HR Specialist',
-    status: 'active',
-    joinDate: '2022-11-10',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=emily.davis@company.com',
-  },
-  {
-    id: '4',
-    name: 'David Martinez',
-    email: 'david.martinez@company.com',
-    department: 'Sales',
-    position: 'Sales Representative',
-    status: 'inactive',
-    joinDate: '2023-05-08',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=david.martinez@company.com',
-  },
-  {
-    id: '5',
-    name: 'Jessica Brown',
-    email: 'jessica.brown@company.com',
-    department: 'Engineering',
-    position: 'Frontend Developer',
-    status: 'active',
-    joinDate: '2023-07-12',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=jessica.brown@company.com',
-  },
-];
-
 export function Dashboard({ userName, userEmail, userAvatar, onLogout }: DashboardProps) {
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+  // Initialize query client first (hooks must be called at the top level)
+  const queryClient = useQueryClient();
+  
+  // Fetch employees using TanStack Query
+  const { isLoading, isError, data, error } = useQuery<Employee[], Error>({
+    queryKey: ['employees'],
+    queryFn: getUser,
+  });
 
-  const handleAddEmployee = (employee: Omit<Employee, 'id'>) => {
-    const newEmployee: Employee = {
-      ...employee,
-      id: Date.now().toString(),
-      avatar: employee.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${employee.email}`,
-    };
-    setEmployees([...employees, newEmployee]);
-  };
+  // Transform the API data to match our Employee interface
+  const employees: Employee[] = (data || []).map((user: any) => ({
+    id: user._id || user.id,
+    name: user.name || '',
+    email: user.email || '',
+    department: user.department || '',
+    position: user.position || '',
+    status: user.status || 'active',
+    joinDate: user.date || user.joinDate || new Date().toISOString().split('T')[0],
+    avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+  }));
 
-  const handleEditEmployee = (id: string, updatedEmployee: Omit<Employee, 'id'>) => {
-    setEmployees(
-      employees.map((emp) => (emp.id === id ? { ...updatedEmployee, id } : emp))
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header 
+          userName={userName} 
+          userEmail={userEmail}
+          userAvatar={userAvatar}
+          onLogout={onLogout} 
+          onNavigateHome={() => {}} 
+        />
+        <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
+          <div>Loading employees...</div>
+        </main>
+        <Footer />
+      </div>
     );
+  }
+
+  // Show error state
+  if (isError) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header 
+          userName={userName} 
+          userEmail={userEmail}
+          userAvatar={userAvatar}
+          onLogout={onLogout} 
+          onNavigateHome={() => {}} 
+        />
+        <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
+          <div>Error loading employees: {error?.message}</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const handleAddEmployee = async (employee: Omit<Employee, 'id'>) => {
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: employee.name,
+          email: employee.email,
+          department: employee.department,
+          position: employee.position,
+          status: employee.status,
+          date: employee.joinDate,
+          avatar: employee.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${employee.email}`,
+        }),
+      });
+      
+      if (response.ok) {
+        // Invalidate and refetch the employees query
+        queryClient.invalidateQueries({ queryKey: ['employees'] });
+      }
+    } catch (error) {
+      console.error('Error adding employee:', error);
+    }
   };
 
-  const handleDeleteEmployee = (id: string) => {
-    setEmployees(employees.filter((emp) => emp.id !== id));
+  const handleEditEmployee = async (id: string, updatedEmployee: Omit<Employee, 'id'>) => {
+    try {
+      const response = await fetch(`/api/users/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: updatedEmployee.name,
+          email: updatedEmployee.email,
+          department: updatedEmployee.department,
+          position: updatedEmployee.position,
+          status: updatedEmployee.status,
+          date: updatedEmployee.joinDate,
+          avatar: updatedEmployee.avatar,
+        }),
+      });
+      
+      if (response.ok) {
+        // Invalidate and refetch the employees query
+        queryClient.invalidateQueries({ queryKey: ['employees'] });
+      }
+    } catch (error) {
+      console.error('Error updating employee:', error);
+    }
+  };
+
+  const handleDeleteEmployee = async (id: string) => {
+    try {
+      const response = await fetch(`/api/users/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        // Invalidate and refetch the employees query
+        queryClient.invalidateQueries({ queryKey: ['employees'] });
+      }
+    } catch (error) {
+      console.error('Error deleting employee:', error);
+    }
   };
 
   const activeEmployees = employees.filter((emp) => emp.status === 'active').length;
@@ -159,7 +215,6 @@ export function Dashboard({ userName, userEmail, userAvatar, onLogout }: Dashboa
             </CardHeader>
             <CardContent>
               <EmployeeTable
-                employees={employees}
                 onAddEmployee={handleAddEmployee}
                 onEditEmployee={handleEditEmployee}
                 onDeleteEmployee={handleDeleteEmployee}
