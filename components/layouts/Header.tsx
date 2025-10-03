@@ -3,6 +3,7 @@ import React from "react";
 
 import { LogOut, LogIn, } from 'lucide-react';
 import { Button } from '../ui/Button';
+import Image from "next/image";
 // Update the import path to the correct location of Avatar components
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/Avatar';
 import {
@@ -40,7 +41,13 @@ export function Header({
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             {/* <Users className="h-6 w-6 text-primary" /> */}
-            <img src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600" alt="" className="h-8 w-auto" />
+            <Image
+              src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
+              alt="Employee Management Logo"
+              width={32}
+              height={32}
+              className="h-8 w-auto"
+            />
             <h1 className="text-primary">Employee MS</h1>
           </div>
           

@@ -16,11 +16,11 @@ interface User {
   avatar?: string;
 }
 
-export default function App() {
+export default function Home() {
   const [currentView, setCurrentView] = useState<View>('login');
   const [user, setUser] = useState<User | null>(null);
 
-  const handleLogin = async (email: string, password: string): Promise<boolean> => {
+  const handleLogin = async (email: string,): Promise<boolean> => {
     // Mock authentication - in a real app, this would call an API
     const mockUser: User = {
       name: email.split('@')[0],

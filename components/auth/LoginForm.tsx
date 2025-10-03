@@ -116,7 +116,7 @@ export function LoginForm({ onLogin, onSwitchToSignup }: LoginFormProps) {
                  {isLoading ? 'Signing In...' : 'Sign In'}
               </Button>
               <p className="text-muted-foreground text-center">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <button
                   type="button"
                   onClick={onSwitchToSignup}
