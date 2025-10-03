@@ -33,7 +33,7 @@ export default function App() {
     return true;
   };
 
-  const handleSignup = async (name: string, email: string, password: string): Promise<boolean> => {
+  const handleSignup = async (name: string, email: string,): Promise<boolean> => {
     // Mock signup - in a real app, this would call an API
     const newUser: User = {
       name: name,

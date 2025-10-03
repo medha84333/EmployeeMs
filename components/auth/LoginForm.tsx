@@ -37,6 +37,7 @@ export function LoginForm({ onLogin, onSwitchToSignup }: LoginFormProps) {
                 setError("Invalid email or password");
             }
         }catch(err){
+            console.error("Login error:", err); 
             setError("An error occurred. Please try again.");
         }finally{
             setLoading(false);

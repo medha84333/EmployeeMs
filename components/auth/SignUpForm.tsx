@@ -8,7 +8,7 @@ import { Header } from '../layouts/Header';
 // import { Footer } from '../layout/Footer';
 // Update the import path below to the correct location of Footer component
 import { Footer } from '../layouts/Footer';
-import { Users, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface SignupFormProps {
   onSignup: (name: string, email: string, password: string) => Promise<boolean>;
@@ -50,9 +50,11 @@ export function SignupForm({ onSignup, onSwitchToLogin }: SignupFormProps) {
     try{
     const success = await onSignup(name, email, password);
     if(!success){
+       
         setError("Signup failed. Please try again.");
     }
     } catch (error) {
+       console.error("Signup error:", error); // ✅ using error now
         setError("An unexpected error occurred. Please try again.");
     } finally {
         setLoading(false);

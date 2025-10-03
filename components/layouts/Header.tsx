@@ -1,7 +1,7 @@
 
 import React from "react";
 
-import { Users, LogOut, Home, LogIn, User } from 'lucide-react';
+import { LogOut, LogIn, } from 'lucide-react';
 import { Button } from '../ui/Button';
 // Update the import path to the correct location of Avatar components
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/Avatar';
