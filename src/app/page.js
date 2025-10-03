@@ -8,21 +8,21 @@ import { Dashboard } from '../../components/dashboard/Dashboard';
 import { Toaster } from '../../components/ui/sonner';
 import { toast } from 'sonner';
 
-type View = 'login' | 'signup' | 'dashboard';
+// type View = 'login' | 'signup' | 'dashboard';
 
-interface User {
-  name: string;
-  email: string;
-  avatar?: string;
-}
+// interface User {
+//   name: string;
+//   email: string;
+//   avatar?: string;
+// }
 
 export default function Home() {
-  const [currentView, setCurrentView] = useState<View>('login');
-  const [user, setUser] = useState<User | null>(null);
+  const [currentView, setCurrentView] = useState('login');
+  const [user, setUser] = useState(null);
 
-  const handleLogin = async (email: string,): Promise<boolean> => {
+  const handleLogin = async (email) => {
     // Mock authentication - in a real app, this would call an API
-    const mockUser: User = {
+    const mockUser = {
       name: email.split('@')[0],
       email: email,
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
@@ -33,9 +33,9 @@ export default function Home() {
     return true;
   };
 
-  const handleSignup = async (name: string, email: string,): Promise<boolean> => {
+  const handleSignup = async (name, email) => {
     // Mock signup - in a real app, this would call an API
-    const newUser: User = {
+    const newUser = {
       name: name,
       email: email,
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
