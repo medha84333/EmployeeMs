@@ -357,6 +357,9 @@ interface APIUser {
   avatar?: string;
 }
 
+// API can return either an array directly or an object with users property
+type APIResponse = APIUser[] | { users: APIUser[] };
+
 export interface Employee {
   id: string;
   name: string;
@@ -395,22 +398,45 @@ export function EmployeeTable({
   });
 
   // Fetch employees using TanStack Query
-  const { isLoading, isError, data, error } = useQuery<APIUser[], Error>({
+  const { isLoading, isError, data, error } = useQuery<APIResponse, Error>({
     queryKey: ['employees'],
     queryFn: getUser,
   });
 
   // Transform API data to match Employee interface (MongoDB schema uses _id, date instead of id, joinDate)
-  const employees: Employee[] = (data || []).map((user: APIUser) => ({
-    id: user._id,
-    name: user.name || '',
-    email: user.email || '',
-    department: user.department || '',
-    position: user.position || '',
-    status: user.status || 'active',
-    joinDate: user.date || new Date().toISOString().split('T')[0],
-    avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
-  }));
+  // const employees: Employee[] = (data || []).map((user: APIUser) => ({
+  //   id: user._id,
+  //   name: user.name || '',
+  //   email: user.email || '',
+  //   department: user.department || '',
+  //   position: user.position || '',
+  //   status: user.status || 'active',
+  //   joinDate: user.date || new Date().toISOString().split('T')[0],
+  //   avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+  // }));
+  const employees: Employee[] = Array.isArray(data)
+  ? data.map((user: APIUser) => ({
+      id: user._id,
+      name: user.name || '',
+      email: user.email || '',
+      department: user.department || '',
+      position: user.position || '',
+      status: user.status || 'active',
+      joinDate: user.date || new Date().toISOString().split('T')[0],
+      avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+    }))
+  : Array.isArray((data as { users?: APIUser[] })?.users)
+  ? (data as { users: APIUser[] }).users.map((user: APIUser) => ({
+      id: user._id,
+      name: user.name || '',
+      email: user.email || '',
+      department: user.department || '',
+      position: user.position || '',
+      status: user.status || 'active',
+      joinDate: user.date || new Date().toISOString().split('T')[0],
+      avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+    }))
+  : [];
 
   const filteredEmployees = employees.filter(
     (emp) =>

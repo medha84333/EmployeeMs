@@ -19,6 +19,9 @@ interface APIUser {
   avatar?: string;
 }
 
+// API can return either an array directly or an object with users property
+type APIResponse = APIUser[] | { users: APIUser[] };
+
 interface DashboardProps {
   userName: string;
   userEmail?: string;
@@ -31,22 +34,45 @@ export function Dashboard({ userName, userEmail, userAvatar, onLogout }: Dashboa
   const queryClient = useQueryClient();
   
   // Fetch employees using TanStack Query
-  const { isLoading, isError, data, error } = useQuery<APIUser[], Error>({
+  const { isLoading, isError, data, error } = useQuery<APIResponse, Error>({
     queryKey: ['employees'],
     queryFn: getUser,
   });
 
   // Transform the API data to match our Employee interface
-  const employees: Employee[] = (data || []).map((user: APIUser) => ({
-    id: user._id,
-    name: user.name || '',
-    email: user.email || '',
-    department: user.department || '',
-    position: user.position || '',
-    status: user.status || 'active',
-    joinDate: user.date || new Date().toISOString().split('T')[0],
-    avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
-  }));
+  // const employees: Employee[] = (data || []).map((user: APIUser) => ({
+  //   id: user._id,
+  //   name: user.name || '',
+  //   email: user.email || '',
+  //   department: user.department || '',
+  //   position: user.position || '',
+  //   status: user.status || 'active',
+  //   joinDate: user.date || new Date().toISOString().split('T')[0],
+  //   avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+  // }));
+  const employees: Employee[] = Array.isArray(data)
+  ? data.map((user: APIUser) => ({
+      id: user._id,
+      name: user.name || '',
+      email: user.email || '',
+      department: user.department || '',
+      position: user.position || '',
+      status: user.status || 'active',
+      joinDate: user.date || new Date().toISOString().split('T')[0],
+      avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+    }))
+  : Array.isArray((data as { users?: APIUser[] })?.users)
+  ? (data as { users: APIUser[] }).users.map((user: APIUser) => ({
+      id: user._id,
+      name: user.name || '',
+      email: user.email || '',
+      department: user.department || '',
+      position: user.position || '',
+      status: user.status || 'active',
+      joinDate: user.date || new Date().toISOString().split('T')[0],
+      avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+    }))
+  : [];
 
   // Show loading state
   if (isLoading) {
