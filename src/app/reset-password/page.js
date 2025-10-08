@@ -8,7 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Header } from "../../../components/layouts/Header";
 import { Footer } from "../../../components/layouts/Footer";
 import { Eye, EyeOff, Lock } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+
+// Prevent static prerendering so client navigation hooks work without Suspense
+export const dynamic = 'force-dynamic';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -18,42 +21,53 @@ export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [tokenValid, setTokenValid] = useState<boolean | null>(null);
+  // const [tokenValid, setTokenValid] = useState<boolean | null>(null);
+  const [tokenValid, setTokenValid] = useState(null);
   
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams?.get("token");
+  const [token, setToken] = useState(null);
 
   useEffect(() => {
+    // Get token from URL on client only
+    if (typeof window === 'undefined') return;
+
     if (!token) {
-      setError("Invalid reset link");
-      setTokenValid(false);
-      return;
-    }
-    
-    // Verify token validity
-    const verifyToken = async () => {
-      try {
-        const res = await fetch("/api/verify-reset-token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token }),
-        });
-        
-        if (res.ok) {
-          setTokenValid(true);
-        } else {
-          setTokenValid(false);
-          setError("Invalid or expired reset link");
-        }
-      } catch {
+      const params = new URLSearchParams(window.location.search);
+      const t = params.get('token');
+      if (!t) {
+        setError('Invalid reset link');
         setTokenValid(false);
-        setError("Failed to verify reset link");
+        return;
       }
-    };
-    
-    verifyToken();
-  }, [token, setTokenValid]);
+      setToken(t);
+    }
+
+    // Verify token validity once token is set
+    if (token) {
+      const verifyToken = async () => {
+        try {
+          const res = await fetch('/api/verify-reset-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+          });
+
+          if (res.ok) {
+            setTokenValid(true);
+          } else {
+            setTokenValid(false);
+            setError('Invalid or expired reset link');
+          }
+        } catch (err) {
+          console.error('verifyToken error:', err);
+          setTokenValid(false);
+          setError('Failed to verify reset link');
+        }
+      };
+
+      verifyToken();
+    }
+  }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
