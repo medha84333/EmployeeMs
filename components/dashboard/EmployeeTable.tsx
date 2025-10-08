@@ -506,7 +506,7 @@ export function EmployeeTable({
             className="pl-9 bg-input-background"
           />
         </div>
-        <Button onClick={() => handleOpenDialog()}>
+        <Button className="transition-all duration-200 ease-in-out cursor-pointer" onClick={() => handleOpenDialog()}>
           <Plus className="h-4 w-4 mr-2" />
           Add Employee
         </Button>
@@ -558,13 +558,15 @@ export function EmployeeTable({
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
+                        className='transition-all duration-200 ease-in-out cursor-pointer'
                         variant="ghost"
                         size="icon"
                         onClick={() => handleOpenDialog(employee)}
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-4 w-4 " />
                       </Button>
                       <Button
+                        className='transition-all duration-200 ease-in-out cursor-pointer'
                         variant="ghost"
                         size="icon"
                         onClick={() => onDeleteEmployee(employee.id)}
@@ -581,7 +583,7 @@ export function EmployeeTable({
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[525px]">
+        <DialogContent className="sm:max-w-[525px] duration-200 ease-in-out cursor-pointer">
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>
@@ -689,10 +691,10 @@ export function EmployeeTable({
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={handleCloseDialog}>
+              <Button className="duration-200 ease-in-out cursor-pointer" type="button" variant="ghost" onClick={handleCloseDialog}>
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button className="duration-200 ease-in-out cursor-pointer" type="submit">
                 {editingEmployee ? 'Save Changes' : 'Add Employee'}
               </Button>
             </DialogFooter>

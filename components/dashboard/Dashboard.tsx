@@ -1,4 +1,5 @@
 "use client";
+import { useState } from 'react';
 import { Header } from '../layouts/Header';
 import { Footer } from '../layouts/Footer';
 import  { EmployeeTable, Employee }  from './EmployeeTable';
@@ -6,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Users, UserCheck, UserX, TrendingUp } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getUser } from '../../lib/helper';
+import { ProfileEdit } from '../profile/ProfileEdit';
 
 // Define the API response type
 interface APIUser {
@@ -26,12 +28,27 @@ interface DashboardProps {
   userName: string;
   userEmail?: string;
   userAvatar?: string;
+  userId?: string;
   onLogout: () => void;
+  onProfileUpdate?: (updatedUser: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  }) => void;
 }
 
-export function Dashboard({ userName, userEmail, userAvatar, onLogout }: DashboardProps) {
+export function Dashboard({ userName, userEmail, userAvatar, userId, onLogout, onProfileUpdate }: DashboardProps) {
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
+  
   // Initialize query client first (hooks must be called at the top level)
   const queryClient = useQueryClient();
+
+  // Handle opening profile edit modal
+  const handleEditProfile = () => {
+    console.log('Opening profile edit modal for user:', userId);
+    setShowProfileEdit(true);
+  };
   
   // Fetch employees using TanStack Query
   const { isLoading, isError, data, error } = useQuery<APIResponse, Error>({
@@ -84,6 +101,7 @@ export function Dashboard({ userName, userEmail, userAvatar, onLogout }: Dashboa
           userAvatar={userAvatar}
           onLogout={onLogout} 
           onNavigateHome={() => {}} 
+          onEditProfile={handleEditProfile}
         />
         <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
           <div>Loading employees...</div>
@@ -103,6 +121,7 @@ export function Dashboard({ userName, userEmail, userAvatar, onLogout }: Dashboa
           userAvatar={userAvatar}
           onLogout={onLogout} 
           onNavigateHome={() => {}} 
+          onEditProfile={handleEditProfile}
         />
         <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
           <div>Error loading employees: {error?.message}</div>
@@ -185,6 +204,17 @@ export function Dashboard({ userName, userEmail, userAvatar, onLogout }: Dashboa
   const inactiveEmployees = employees.filter((emp) => emp.status === 'inactive').length;
   const totalEmployees = employees.length;
 
+  // Calculate employees added this month
+  const thisMonthEmployees = employees.filter((emp) => {
+    const employeeJoinDate = new Date(emp.joinDate);
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    
+    return employeeJoinDate.getFullYear() === currentYear && 
+           employeeJoinDate.getMonth() === currentMonth;
+  }).length;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header 
@@ -193,6 +223,7 @@ export function Dashboard({ userName, userEmail, userAvatar, onLogout }: Dashboa
         userAvatar={userAvatar}
         onLogout={onLogout} 
         onNavigateHome={() => {}} 
+        onEditProfile={handleEditProfile}
       />
 
       <main className="flex-1 container mx-auto px-4 py-8">
@@ -241,7 +272,7 @@ export function Dashboard({ userName, userEmail, userAvatar, onLogout }: Dashboa
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-primary">+2</div>
+                <div className="text-primary">+{thisMonthEmployees}</div>
               </CardContent>
             </Card>
           </div>
@@ -262,6 +293,25 @@ export function Dashboard({ userName, userEmail, userAvatar, onLogout }: Dashboa
       </main>
 
       <Footer />
+
+      {/* Profile Edit Modal */}
+      {showProfileEdit && (
+        <ProfileEdit
+          user={{
+            id: userId || 'current-user-id', // Use actual userId or fallback
+            name: userName,
+            email: userEmail || '',
+            avatar: userAvatar
+          }}
+          onClose={() => setShowProfileEdit(false)}
+          onProfileUpdate={(updatedUser) => {
+            if (onProfileUpdate) {
+              onProfileUpdate(updatedUser);
+            }
+            setShowProfileEdit(false);
+          }}
+        />
+      )}
     </div>
   );
 }
